@@ -31,7 +31,8 @@ export function createApp(): Express {
         if (!requestOrigin) return callback(null, true);
         if (
           requestOrigin === env.FRONTEND_URL ||
-          /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(requestOrigin)
+          /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(requestOrigin) ||
+          /^https:\/\/.*\.vercel\.app$/.test(requestOrigin)
         ) {
           return callback(null, true);
         }
