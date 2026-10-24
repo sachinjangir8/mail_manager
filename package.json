@@ -16,7 +16,7 @@
     "build": "npm run build:shared && npm run build --workspace=@reachinbox/web",
     "build:all": "npm run build --workspaces --if-present",
     "build:shared": "npm run build --workspace=@reachinbox/shared",
-    "build:api": "npm run build --workspace=@reachinbox/api",
+    "build:api": "npm run build:shared && npm run build --workspace=@reachinbox/api",
     "build:web": "npm run build:shared && npm run build --workspace=@reachinbox/web",
     "postinstall": "npm run db:generate --workspace=@reachinbox/api",
     "test": "npm run test --workspaces --if-present",

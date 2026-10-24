@@ -23,10 +23,12 @@ async function bootstrap() {
   const app = createApp();
   const server = http.createServer(app);
 
-  server.listen(env.API_PORT, () => {
-    logger.info(`ReachInbox API running at http://localhost:${env.API_PORT}`);
-    logger.info(`Swagger OpenAPI Documentation: http://localhost:${env.API_PORT}/api/docs`);
-    logger.info(`BullMQ Queue Dashboard: http://localhost:${env.API_PORT}/api/admin/queues`);
+  const port = Number(process.env.PORT) || env.API_PORT;
+
+  server.listen(port, "0.0.0.0", () => {
+    logger.info(`ReachInbox API running at http://localhost:${port}`);
+    logger.info(`Swagger OpenAPI Documentation: http://localhost:${port}/api/docs`);
+    logger.info(`BullMQ Queue Dashboard: http://localhost:${port}/api/admin/queues`);
   });
 
   const gracefulShutdown = async (signal: string) => {
