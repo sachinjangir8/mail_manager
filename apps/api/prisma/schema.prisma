@@ -9,8 +9,9 @@ datasource db {
 
 model User {
   id           String              @id @default(uuid())
-  googleId     String              @unique
+  googleId     String?             @unique
   email        String              @unique
+  passwordHash String?
   name         String
   avatarUrl    String?
   senders      EmailSender[]

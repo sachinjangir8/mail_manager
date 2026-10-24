@@ -8,8 +8,9 @@ export interface User {
   avatarUrl?: string | null;
 }
 
-interface MeResponse {
+interface AuthResponse {
   success: boolean;
+  token?: string;
   user: User;
 }
 
@@ -22,30 +23,54 @@ export function useAuth() {
     isError,
     error,
     refetch,
-  } = useQuery<MeResponse>({
+  } = useQuery<AuthResponse>({
     queryKey: ["auth", "me"],
-    queryFn: () => apiFetch<MeResponse>("/auth/me"),
+    queryFn: () => apiFetch<AuthResponse>("/auth/me"),
     retry: false,
     staleTime: 5 * 60 * 1000,
+  });
+
+  const handleAuthSuccess = (res: AuthResponse) => {
+    if (res.token) {
+      localStorage.setItem("reachinbox_token", res.token);
+    }
+    queryClient.setQueryData(["auth", "me"], { success: true, user: res.user });
+    window.location.href = "/";
+  };
+
+  const loginMutation = useMutation({
+    mutationFn: (body: { email: string; password: string }) =>
+      apiFetch<AuthResponse>("/auth/login", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    onSuccess: handleAuthSuccess,
+  });
+
+  const signupMutation = useMutation({
+    mutationFn: (body: { email: string; password: string; name?: string }) =>
+      apiFetch<AuthResponse>("/auth/signup", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    onSuccess: handleAuthSuccess,
+  });
+
+  const devLoginMutation = useMutation({
+    mutationFn: (body: { email?: string; name?: string }) =>
+      apiFetch<AuthResponse>("/auth/dev-login", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    onSuccess: handleAuthSuccess,
   });
 
   const logoutMutation = useMutation({
     mutationFn: () => apiFetch("/auth/logout", { method: "POST" }),
     onSuccess: () => {
+      localStorage.removeItem("reachinbox_token");
       queryClient.setQueryData(["auth", "me"], null);
       window.location.href = "/login";
-    },
-  });
-
-  const devLoginMutation = useMutation({
-    mutationFn: (body: { email?: string; name?: string }) =>
-      apiFetch<MeResponse>("/auth/dev-login", {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(["auth", "me"], data);
-      window.location.href = "/";
     },
   });
 
@@ -56,9 +81,15 @@ export function useAuth() {
     isError,
     error,
     refetch,
-    logout: logoutMutation.mutate,
-    isLoggingOut: logoutMutation.isPending,
+    login: loginMutation.mutateAsync,
+    isLoggingIn: loginMutation.isPending,
+    loginError: loginMutation.error,
+    signup: signupMutation.mutateAsync,
+    isSigningUp: signupMutation.isPending,
+    signupError: signupMutation.error,
     devLogin: devLoginMutation.mutate,
     isDevLoggingIn: devLoginMutation.isPending,
+    logout: logoutMutation.mutate,
+    isLoggingOut: logoutMutation.isPending,
   };
 }

@@ -42,3 +42,20 @@ export function decryptToken(encryptedData: string): string {
 export function generateIdempotencyKey(parts: string[]): string {
   return crypto.createHash("sha256").update(parts.join("|")).digest("hex");
 }
+
+export function hashPassword(password: string): string {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.pbkdf2Sync(password, salt, 10000, 64, "sha512").toString("hex");
+  return `${salt}:${hash}`;
+}
+
+export function verifyPassword(password: string, combinedHash: string): boolean {
+  try {
+    const [salt, key] = combinedHash.split(":");
+    if (!salt || !key) return false;
+    const testHash = crypto.pbkdf2Sync(password, salt, 10000, 64, "sha512").toString("hex");
+    return crypto.timingSafeEqual(Buffer.from(key, "hex"), Buffer.from(testHash, "hex"));
+  } catch {
+    return false;
+  }
+}
