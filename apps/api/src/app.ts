@@ -24,10 +24,19 @@ export function createApp(): Express {
     })
   );
 
-  // 2. CORS configuration for frontend
+  // 2. CORS configuration for frontend (supports any local dev port 5173, 5174, etc.)
   app.use(
     cors({
-      origin: [env.FRONTEND_URL, "http://localhost:5173", "http://127.0.0.1:5173"],
+      origin: (requestOrigin, callback) => {
+        if (!requestOrigin) return callback(null, true);
+        if (
+          requestOrigin === env.FRONTEND_URL ||
+          /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(requestOrigin)
+        ) {
+          return callback(null, true);
+        }
+        return callback(new Error(`Not allowed by CORS: ${requestOrigin}`));
+      },
       credentials: true,
       methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
