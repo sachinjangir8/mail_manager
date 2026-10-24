@@ -32,6 +32,7 @@ data/
 *.db-journal
 *.sqlite
 *.sqlite-journal
+dump.rdb
 
 # Editor and OS files
 .DS_Store
