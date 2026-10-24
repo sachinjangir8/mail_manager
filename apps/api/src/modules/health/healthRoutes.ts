@@ -1,11 +1,11 @@
-import { Router } from "express";
+import { Request, Response, Router } from "express";
 import { prisma } from "../../db/prisma";
 import { searchService } from "../../integrations/elasticsearch/searchService";
 import { redisConnection } from "../../queues/redis";
 
 export const healthRouter = Router();
 
-healthRouter.get("/health", (req, res) => {
+healthRouter.get("/health", (req: Request, res: Response) => {
   res.status(200).json({
     status: "healthy",
     timestamp: new Date().toISOString(),
@@ -13,7 +13,7 @@ healthRouter.get("/health", (req, res) => {
   });
 });
 
-healthRouter.get("/ready", async (req, res) => {
+healthRouter.get("/ready", async (req: Request, res: Response) => {
   const checks: Record<string, boolean> = {
     database: false,
     redis: false,

@@ -32,6 +32,9 @@
     "docker:down": "docker compose -f infra/docker-compose.yml down",
     "docker:logs": "docker compose -f infra/docker-compose.yml logs -f"
   },
+  "dependencies": {
+    "typescript": "^5.7.3"
+  },
   "devDependencies": {
     "typescript": "^5.7.3"
   }
