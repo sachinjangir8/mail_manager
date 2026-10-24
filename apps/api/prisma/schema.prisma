@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String              @id @default(uuid())
+  googleId     String              @unique
+  email        String              @unique
+  name         String
+  avatarUrl    String?
+  senders      EmailSender[]
+  campaigns    EmailCampaign[]
+  emails       ScheduledEmail[]
+  integrations OAuthIntegration[]
+  rateLimits   RateLimitEvent[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([googleId])
+  @@index([email])
+}
+
+model EmailSender {
+  id                String           @id @default(uuid())
+  userId            String
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName       String
+  email             String
+  smtpHost          String           @default("smtp.ethereal.email")
+  smtpPort          Int              @default(587)
+  encryptedSmtpUser String
+  encryptedSmtpPass String
+  isEthereal        Boolean          @default(true)
+  enabled           Boolean          @default(true)
+  emails            ScheduledEmail[]
+  rateLimitEvents   RateLimitEvent[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([userId])
+  @@index([email])
+}
+
+model EmailCampaign {
+  id                  String           @id @default(uuid())
+  userId              String
+  user                User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject             String
+  body                String
+  startTime           DateTime
+  delayBetweenSendsMs Int              @default(5000)
+  hourlyLimit         Int              @default(20)
+  status              String           @default("scheduled") // scheduled | in_progress | completed | cancelled
+  idempotencyKey      String?
+  emails              ScheduledEmail[]
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId])
+  @@index([status])
+}
+
+model ScheduledEmail {
+  id                 String        @id @default(uuid())
+  userId             String
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaignId         String
+  campaign           EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  senderId           String
+  sender             EmailSender   @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  recipientEmail     String
+  subject            String
+  body               String
+  scheduledTime      DateTime
+  status             String        @default("scheduled") // scheduled | queued | processing | sent | failed | rate_limited | cancelled
+  bullMqJobId        String?
+  attemptCount       Int           @default(0)
+  sentTime           DateTime?
+  failureReason      String?
+  etherealPreviewUrl String?
+  idempotencyKey     String        @unique
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([campaignId])
+  @@index([senderId])
+  @@index([status])
+  @@index([scheduledTime])
+  @@index([bullMqJobId])
+}
+
+model OAuthIntegration {
+  id                   String    @id @default(uuid())
+  userId               String
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider             String // "slack"
+  encryptedAccessToken String
+  encryptedRefreshToken String?
+  scopes               String
+  workspaceName        String?
+  channelId            String?
+  channelName          String?
+  expiresAt            DateTime?
+  status               String    @default("connected") // connected | disconnected | revoked
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@unique([userId, provider])
+  @@index([userId])
+  @@index([provider])
+}
+
+model RateLimitEvent {
+  id                String      @id @default(uuid())
+  senderId          String
+  sender            EmailSender @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hourWindow        String // ISO string start of hour e.g. "2026-10-24T14:00:00.000Z"
+  eventType         String // "HOURLY_LIMIT_REACHED" | "GLOBAL_LIMIT_REACHED"
+  notificationState String      @default("PENDING") // PENDING | SENT | FAILED | SKIPPED
+  nextEligibleTime  DateTime
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@unique([senderId, hourWindow, eventType])
+  @@index([senderId])
+  @@index([userId])
+}
+
+model OutboxEvent {
+  id            String    @id @default(uuid())
+  aggregateType String // "EMAIL_SCHEDULE" | "SLACK_NOTIFICATION" | "ELASTICSEARCH_INDEX"
+  aggregateId   String
+  eventType     String
+  payload       String // JSON string
+  status        String    @default("PENDING") // PENDING | PROCESSING | PROCESSED | FAILED
+  retryCount    Int       @default(0)
+  lastError     String?
+  createdAt     DateTime  @default(now())
+  processedAt   DateTime?
+
+  @@index([status])
+  @@index([aggregateType, status])
+}

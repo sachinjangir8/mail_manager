@@ -1,0 +1,34 @@
+{
+  "name": "reachinbox-scheduler-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ReachInbox Full-Stack Email Scheduler with BullMQ, Redis, PostgreSQL, Elasticsearch, Google OAuth, and Slack",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:api": "npm run dev --workspace=@reachinbox/api",
+    "dev:worker": "npm run worker --workspace=@reachinbox/api",
+    "dev:web": "npm run dev --workspace=@reachinbox/web",
+    "build": "npm run build --workspaces --if-present",
+    "build:api": "npm run build --workspace=@reachinbox/api",
+    "build:web": "npm run build --workspace=@reachinbox/web",
+    "test": "npm run test --workspaces --if-present",
+    "test:unit": "npm run test:unit --workspace=@reachinbox/api",
+    "test:integration": "npm run test:integration --workspace=@reachinbox/api",
+    "test:web": "npm run test --workspace=@reachinbox/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "db:migrate": "npm run db:migrate --workspace=@reachinbox/api",
+    "db:generate": "npm run db:generate --workspace=@reachinbox/api",
+    "db:seed": "npm run db:seed --workspace=@reachinbox/api",
+    "docker:up": "docker compose -f infra/docker-compose.yml up -d",
+    "docker:down": "docker compose -f infra/docker-compose.yml down",
+    "docker:logs": "docker compose -f infra/docker-compose.yml logs -f"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
