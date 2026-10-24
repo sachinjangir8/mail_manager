@@ -48,5 +48,7 @@ coverage/
 # Docker volumes
 docker-data/
 postgres-data/
+.local_postgres_data/
 redis-data/
 elasticsearch-data/
+
