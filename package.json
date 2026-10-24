@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspaces --if-present",
+    "services:start": "powershell -ExecutionPolicy Bypass -File scripts/start-local-services.ps1",
     "dev:api": "npm run dev --workspace=@reachinbox/api",
     "dev:worker": "npm run worker --workspace=@reachinbox/api",
     "dev:web": "npm run dev --workspace=@reachinbox/web",
